@@ -8,8 +8,15 @@ import Map from './components/Map/Map'
 
 const App = () => {
   const [places, setPlaces] = useState([])
+  const [placeFilter, setPlaceFilter] = useState([])
   const [coordinates, setCoordinates] = useState({})
   const [bounds, setBounds] = useState({})
+  const [childClicked, setchildClicked] = useState(null)
+
+  const [type, setType] = useState('restaurants')
+  const [rating, setRating] = useState('')
+
+  const [loading, setLoading] = useState(false)
 
   useEffect (() => {
     navigator.geolocation.getCurrentPosition(({coords: {latitude, longitude} }) => {
@@ -17,23 +24,47 @@ const App = () => {
     })
   }, [])
 
+  useEffect (() => {
+    const placeFiltered = places.filter((place) => Number(place.rating) > rating)
+
+    setPlaceFilter(placeFiltered)
+  }, [rating])
+
   useEffect(() => {
-    getPlacesData(bounds.sw, bounds.ne)
+    setLoading(true)
+
+    getPlacesData(type, bounds.sw, bounds.ne)
     .then((data) => {
       setPlaces(data)
+      setPlaceFilter([])
+      setLoading(false)
     })
-  }, [coordinates, bounds])
+  }, [type, coordinates, bounds])
 
   return (
     <>
       <CssBaseline />
-      <Header />
+      <Header setCoordinates={setCoordinates}/>
       <Grid container spacing={3} style={{ width: '100%'}}>
         <Grid item xs={12} md={4}>
-          <List places={places}/>
+          <List 
+            places={placeFilter.length ? placeFilter : places} 
+            type={type} 
+            setType={setType} 
+            rating={rating} 
+            setRating={setRating} 
+            childClicked={childClicked} 
+            isLoading={loading}
+          />
         </Grid>
         <Grid item xs={12} md={8}>
-          <Map places={places} setCoordinates={setCoordinates} setBounds={setBounds} coordinates={coordinates}/>
+          <Map 
+            places={placeFilter.length ? placeFilter : places} 
+            setCoordinates={setCoordinates} 
+            setBounds={setBounds} 
+            setchildClicked={setchildClicked} 
+            coordinates={coordinates}
+          />
         </Grid>
       </Grid>
       
